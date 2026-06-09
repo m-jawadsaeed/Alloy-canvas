@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+
+  username      String         @unique
+  email         String         @unique
+  password      String
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  refreshTokens RefreshToken[]
+  messages      Message[]
+  rooms         RoomMember[]
+
+  @@map("users")
+}
+
+model Room {
+  id          String        @id @default(cuid())
+
+  name        String
+  slug        String        @unique
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  members     RoomMember[]
+  messages    Message[]
+  canvas      Canvas?
+
+  @@map("rooms")
+}
+
+model RoomMember {
+
+  id          String      @id @default(cuid())
+
+  userId      String
+  roomId      String
+
+  joinedAt    DateTime    @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  room        Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId])
+
+  @@map("room_members")
+}
+
+model Message {
+
+  id          String      @id @default(cuid())
+
+  content     String
+
+  createdAt   DateTime    @default(now())
+
+  userId       String
+
+  roomId       String
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("messages")
+}
+
+model Canvas {
+
+  id          String      @id @default(cuid())
+
+  roomId      String      @unique
+
+  data        Json
+
+  updatedAt   DateTime    @updatedAt
+
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@map("canvas")
+}
+
+model RefreshToken {
+
+  id          String      @id @default(cuid())
+
+  token       String      @unique
+
+  userId       String
+
+  createdAt   DateTime    @default(now())
+
+  expiresAt   DateTime
+
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
