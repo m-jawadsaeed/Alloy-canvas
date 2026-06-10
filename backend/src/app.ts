@@ -1,29 +1,39 @@
 import express from "express";
 import cors from "cors";
-import cookieParser from "cookie-parser";
 
-import { env } from "./config/env";
+import authRoutes from "./routes/auth.routes";
+import chatRoutes from "./routes/chat.routes";
+import userRoutes from "./routes/user.routes";
+import statsRoutes from "./routes/stats.routes";
+import canvasRoutes from "./routes/canvas.routes";
+import roomRoutes from "./routes/room.routes";
+
+import { errorMiddleware } from "./middlewares/error.middleware";
 
 const app = express();
 
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
 
 app.use(express.json());
 
-app.use(express.urlencoded({ extended: true }));
-
-app.use(cookieParser());
-
-app.get("/", (_, res) => {
+app.get("/health", (_, res) => {
   res.json({
-    success: true,
-    message: "Alloy API Running",
+    status: "ok",
   });
 });
+
+app.use("/api/auth", authRoutes);
+app.use("/api/chat", chatRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/stats", statsRoutes);
+app.use("/api/canvas", canvasRoutes);
+app.use("/api/rooms", roomRoutes);
+
+app.use(errorMiddleware);
 
 export default app;

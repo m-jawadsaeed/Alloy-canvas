@@ -10,6 +10,7 @@ datasource db {
 model User {
   id            String         @id @default(cuid())
 
+  name          String
   username      String         @unique
   email         String         @unique
   password      String
@@ -41,7 +42,6 @@ model Room {
 }
 
 model RoomMember {
-
   id          String      @id @default(cuid())
 
   userId      String
@@ -49,9 +49,8 @@ model RoomMember {
 
   joinedAt    DateTime    @default(now())
 
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  room        Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room        Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roomId])
 
@@ -59,52 +58,47 @@ model RoomMember {
 }
 
 model Message {
-
-  id          String      @id @default(cuid())
+  id          String    @id @default(cuid())
 
   content     String
 
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime  @default(now())
 
-  userId       String
+  userId      String
+  roomId      String
 
-  roomId       String
-
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  room        Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@map("messages")
 }
 
 model Canvas {
+  id          String    @id @default(cuid())
 
-  id          String      @id @default(cuid())
+  roomId      String    @unique
 
-  roomId      String      @unique
+  data        String    @db.Text
 
-  data        Json
+  updatedAt   DateTime  @updatedAt
 
-  updatedAt   DateTime    @updatedAt
-
-  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  room        Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   @@map("canvas")
 }
 
 model RefreshToken {
+  id          String    @id @default(cuid())
 
-  id          String      @id @default(cuid())
+  token       String    @unique
 
-  token       String      @unique
+  userId      String
 
-  userId       String
-
-  createdAt   DateTime    @default(now())
+  createdAt   DateTime  @default(now())
 
   expiresAt   DateTime
 
-  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("refresh_tokens")
 }
