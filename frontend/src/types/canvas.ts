@@ -1,17 +1,10 @@
-export interface Point {
-  x: number;
-  y: number;
-}
-
 export interface CanvasElement {
   id: string;
 
-  type: "pen" | "rectangle" | "circle" | "text";
+  type: "pen" | "rect" | "circle" | "text";
 
-  points?: Point[];
-
-  x?: number;
-  y?: number;
+  x: number;
+  y: number;
 
   width?: number;
   height?: number;
@@ -19,6 +12,4 @@ export interface CanvasElement {
   text?: string;
 
   color: string;
-
-  strokeWidth: number;
 }
