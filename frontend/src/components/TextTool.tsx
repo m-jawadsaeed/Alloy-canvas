@@ -1,35 +1,32 @@
-import { useState } from "react";
-
 interface Props {
-  onAdd: (text: string) => void;
+  onClose: () => void;
 }
 
-export default function TextTool({ onAdd }: Props) {
-  const [text, setText] = useState("");
-
+export default function TextTool({ onClose }: Props) {
   return (
-    <div className="fixed bottom-6 left-6 bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-xl z-40 w-72">
-      <h3 className="text-white font-semibold mb-3">Add Text</h3>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+      <div className="bg-slate-900 border border-slate-700 rounded-2xl p-6 w-full max-w-md">
+        <h2 className="text-xl font-bold text-white mb-4">Add Text</h2>
 
-      <textarea
-        rows={3}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white resize-none"
-        placeholder="Type text..."
-      />
+        <textarea
+          rows={4}
+          placeholder="Write something..."
+          className="w-full bg-slate-800 border border-slate-700 rounded-xl p-3 text-white"
+        />
 
-      <button
-        onClick={() => {
-          if (!text.trim()) return;
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 rounded-lg bg-slate-700 text-white"
+          >
+            Cancel
+          </button>
 
-          onAdd(text);
-          setText("");
-        }}
-        className="mt-3 w-full bg-blue-600 hover:bg-blue-700 py-2 rounded-lg text-white font-medium"
-      >
-        Add To Canvas
-      </button>
+          <button className="px-4 py-2 rounded-lg bg-blue-600 text-white">
+            Add
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

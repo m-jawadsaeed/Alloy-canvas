@@ -1,37 +1,21 @@
-interface Activity {
-  id: string;
-  username: string;
-  action: string;
-  timestamp: string;
-}
+export default function ActivityFeed() {
+  const activities = [
+    "Ahmed joined room",
+    "Ali added rectangle",
+    "Sara sent message",
+    "Hamza edited canvas",
+  ];
 
-interface ActivityFeedProps {
-  activities: Activity[];
-}
-
-export default function ActivityFeed({ activities }: ActivityFeedProps) {
   return (
-    <div className="h-full overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950">
-      <div className="border-b border-slate-800 p-4">
-        <h2 className="font-semibold text-white">Activity Feed</h2>
-      </div>
-
-      <div className="space-y-3 p-4">
-        {activities.map((activity) => (
-          <div key={activity.id} className="rounded-xl bg-slate-900 p-3">
-            <p className="text-sm text-white">
-              <span className="font-semibold">{activity.username}</span>{" "}
-              {activity.action}
-            </p>
-
-            <span className="text-xs text-slate-500">{activity.timestamp}</span>
-          </div>
-        ))}
-
-        {activities.length === 0 && (
-          <p className="text-sm text-slate-500">No activity yet.</p>
-        )}
-      </div>
+    <div className="p-4 space-y-3">
+      {activities.map((item, index) => (
+        <div
+          key={index}
+          className="bg-slate-800 border border-slate-700 rounded-xl p-3 text-sm text-slate-300"
+        >
+          {item}
+        </div>
+      ))}
     </div>
   );
 }

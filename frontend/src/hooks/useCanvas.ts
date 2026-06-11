@@ -1,17 +1,18 @@
-import { useState } from "react";
+import { useRef } from "react";
 
-export const useCanvas =
-  () => {
-    const [tool, setTool] =
-      useState("pencil");
+export function useCanvas() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
-    const [color, setColor] =
-      useState("#000000");
+  const getContext = () => {
+    const canvas = canvasRef.current;
 
-    return {
-      tool,
-      setTool,
-      color,
-      setColor,
-    };
+    if (!canvas) return null;
+
+    return canvas.getContext("2d");
   };
+
+  return {
+    canvasRef,
+    getContext,
+  };
+}

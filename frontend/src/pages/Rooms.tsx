@@ -16,7 +16,9 @@ export default function Room() {
 
   const [messages, setMessages] = useState<message[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+
   const [showChat, setShowChat] = useState(true);
+  const [showUsers, setShowUsers] = useState(true);
 
   useEffect(() => {
     if (!roomId) return;
@@ -24,7 +26,6 @@ export default function Room() {
     const fetchMessages = async () => {
       try {
         const res = await api.get(`/chat/messages/${roomId}`);
-
         setMessages(res.data);
       } catch (error) {
         console.error(error);
@@ -36,7 +37,6 @@ export default function Room() {
 
   useEffect(() => {
     if (!roomId) return;
-
     const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
     socket.emit("join-room", {
@@ -54,12 +54,10 @@ export default function Room() {
     };
 
     socket.on("receive-message", handleMessage);
-
     socket.on("room-users", handleUsers);
 
     return () => {
       socket.off("receive-message", handleMessage);
-
       socket.off("room-users", handleUsers);
     };
   }, [roomId]);
@@ -73,46 +71,64 @@ export default function Room() {
   }
 
   return (
-    <div className="h-screen bg-slate-950 flex flex-col overflow-hidden">
-      <header className="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6">
-        <div>
-          <h1 className="text-white font-bold text-xl">Alloy Canvas</h1>
+    <div className="h-screen bg-slate-950 flex overflow-hidden">
+      ```
+      {showUsers && (
+        <aside className="w-72 bg-slate-900 border-r border-slate-800 flex flex-col">
+          <div className="h-16 border-b border-slate-800 flex items-center justify-between px-4">
+            <h2 className="text-white font-bold">Collaborators</h2>
 
-          <p className="text-slate-400 text-xs">Room ID: {roomId}</p>
-        </div>
+            <span className="text-xs text-emerald-400">
+              {users.length} Online
+            </span>
+          </div>
 
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => navigator.clipboard.writeText(window.location.href)}
-            className="px-4 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700"
-          >
-            Invite
-          </button>
-
-          <button
-            onClick={() => setShowChat(!showChat)}
-            className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-          >
-            {showChat ? "Hide Chat" : "Show Chat"}
-          </button>
-        </div>
-      </header>
-
-      <div className="flex flex-1 overflow-hidden">
-        <aside className="w-72 border-r border-slate-800 bg-slate-900">
           <UserList users={users} />
         </aside>
+      )}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="h-16 bg-slate-900 border-b border-slate-800 flex items-center justify-between px-6">
+          <div>
+            <h1 className="text-white font-bold text-lg">Alloy Canvas</h1>
 
-        <main className="flex-1 overflow-hidden">
+            <p className="text-slate-400 text-xs">Room: {roomId}</p>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={() =>
+                navigator.clipboard.writeText(window.location.href)
+              }
+              className="px-4 py-2 bg-blue-600 rounded-xl text-white hover:bg-blue-700"
+            >
+              Invite
+            </button>
+
+            <button
+              onClick={() => setShowUsers(!showUsers)}
+              className="px-4 py-2 bg-slate-800 rounded-xl text-white"
+            >
+              Users
+            </button>
+
+            <button
+              onClick={() => setShowChat(!showChat)}
+              className="px-4 py-2 bg-slate-800 rounded-xl text-white"
+            >
+              Chat
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-hidden">
           <Whiteboard roomId={roomId} users={users} messages={messages} />
-        </main>
-
-        {showChat && (
-          <aside className="w-[380px] border-l border-slate-800 bg-slate-900">
-            <Chat roomId={roomId} messages={messages} />
-          </aside>
-        )}
-      </div>
+        </div>
+      </main>
+      {showChat && (
+        <aside className="w-[360px] border-l border-slate-800 bg-slate-900">
+          <Chat roomId={roomId} messages={messages} />
+        </aside>
+      )}
     </div>
   );
 }

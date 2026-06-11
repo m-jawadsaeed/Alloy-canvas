@@ -1,30 +1,22 @@
-import { useCanvasStore } from "../store/canvas.store";
-
 export default function LayersPanel() {
-  const elements = useCanvasStore((state) => state.elements);
+  const layers = ["Rectangle", "Circle", "Text Layer", "Sticky Note"];
 
   return (
-    <aside className="fixed right-0 top-16 h-[calc(100vh-64px)] w-72 bg-slate-950 border-l border-slate-800 overflow-y-auto">
-      <div className="p-4 border-b border-slate-800">
-        <h2 className="font-semibold text-white">Layers</h2>
-      </div>
-
-      <div className="p-2">
-        {elements.length === 0 && (
-          <p className="text-slate-500 text-sm p-3">No layers yet</p>
-        )}
-
-        {elements.map((element) => (
+    <div className="flex-1 overflow-y-auto p-4">
+      <div className="space-y-3">
+        {layers.map((layer, index) => (
           <div
-            key={element.id}
-            className="bg-slate-900 border border-slate-800 rounded-lg p-3 mb-2 hover:bg-slate-800 transition"
+            key={index}
+            className="bg-slate-800 border border-slate-700 rounded-xl p-3 hover:border-blue-500 cursor-pointer transition"
           >
-            <p className="text-white text-sm">{element.type}</p>
+            <div className="flex items-center justify-between">
+              <span className="text-white text-sm">{layer}</span>
 
-            <p className="text-xs text-slate-400">{element.id.slice(0, 8)}</p>
+              <span className="text-xs text-slate-400">#{index + 1}</span>
+            </div>
           </div>
         ))}
       </div>
-    </aside>
+    </div>
   );
 }

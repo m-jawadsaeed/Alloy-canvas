@@ -10,8 +10,8 @@ const router = Router();
 
 router.get("/", getRooms);
 
-router.get("/:roomId", getRoomInfo);
-
 router.post("/", createRoom);
+
+router.get("/:roomId", getRoomInfo);
 
 export default router;

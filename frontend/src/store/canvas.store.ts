@@ -1,50 +1,32 @@
 import { create } from "zustand";
 
-export interface CanvasElement {
-  id: string;
-  type: string;
-  text?: string;
-  x: number;
-  y: number;
-  color?: string;
-}
+import type { CanvasElement } from "../types/canvas";
 
 interface CanvasState {
   elements: CanvasElement[];
 
-  addElement: (
-    element: CanvasElement
-  ) => void;
+  addElement: (element: CanvasElement) => void;
 
-  removeElement: (
-    id: string
-  ) => void;
+  setElements: (elements: CanvasElement[]) => void;
+
+  clearCanvas: () => void;
 }
 
-export const useCanvasStore =
-  create<CanvasState>(
-    (set) => ({
+export const useCanvasStore = create<CanvasState>((set) => ({
+  elements: [],
+
+  addElement: (element) =>
+    set((state) => ({
+      elements: [...state.elements, element],
+    })),
+
+  setElements: (elements) =>
+    set({
+      elements,
+    }),
+
+  clearCanvas: () =>
+    set({
       elements: [],
-
-      addElement: (
-        element
-      ) =>
-        set((state) => ({
-          elements: [
-            ...state.elements,
-            element,
-          ],
-        })),
-
-      removeElement: (
-        id
-      ) =>
-        set((state) => ({
-          elements:
-            state.elements.filter(
-              (e) =>
-                e.id !== id
-            ),
-        })),
-    })
-  );
+    }),
+}));

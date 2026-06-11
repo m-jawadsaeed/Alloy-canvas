@@ -1,11 +1,10 @@
 import { useState } from "react";
-import Toolbar from "./Toolbar";
-import Chat from "./Chat";
-import UserList from "./UserList";
-import LayersPanel from "./LayersPanel";
-import type { message } from "../types/message";
-import type { User } from "../types/user";    
 
+import Toolbar from "./Toolbar";
+import LayersPanel from "./LayersPanel";
+
+import type { message } from "../types/message";
+import type { User } from "../types/user";
 
 interface Props {
   roomId: string;
@@ -17,44 +16,50 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
   const [tool, setTool] = useState("pen");
 
   return (
-    <div className="h-screen bg-[#0f172a] text-white overflow-hidden">
-      {/* TOP BAR */}
+    <div className="h-full flex flex-col bg-slate-950">
       <Toolbar />
 
-      <div className="flex h-[calc(100vh-72px)]">
-        {/* LEFT SIDEBAR */}
-        <div className="w-20 bg-slate-950 border-r border-slate-800 flex flex-col items-center py-4 gap-4">
+      <div className="flex flex-1 overflow-hidden">
+        {/* LEFT TOOLBAR */}
+
+        <div className="w-20 bg-slate-900 border-r border-slate-800 flex flex-col items-center py-4 gap-3">
           <button
             onClick={() => setTool("pen")}
-            className={`w-12 h-12 rounded-xl ${
-              tool === "pen" ? "bg-blue-600" : "bg-slate-800"
+            className={`w-12 h-12 rounded-xl text-white transition ${
+              tool === "pen" ? "bg-blue-600" : "bg-slate-800 hover:bg-slate-700"
             }`}
           >
-            ✏️
+            ✏
           </button>
 
           <button
             onClick={() => setTool("eraser")}
-            className={`w-12 h-12 rounded-xl ${
-              tool === "eraser" ? "bg-blue-600" : "bg-slate-800"
+            className={`w-12 h-12 rounded-xl text-white transition ${
+              tool === "eraser"
+                ? "bg-blue-600"
+                : "bg-slate-800 hover:bg-slate-700"
             }`}
           >
-            🩹
+            ⌫
           </button>
 
           <button
             onClick={() => setTool("text")}
-            className={`w-12 h-12 rounded-xl ${
-              tool === "text" ? "bg-blue-600" : "bg-slate-800"
+            className={`w-12 h-12 rounded-xl text-white transition ${
+              tool === "text"
+                ? "bg-blue-600"
+                : "bg-slate-800 hover:bg-slate-700"
             }`}
           >
             T
           </button>
 
           <button
-            onClick={() => setTool("rectangle")}
-            className={`w-12 h-12 rounded-xl ${
-              tool === "rectangle" ? "bg-blue-600" : "bg-slate-800"
+            onClick={() => setTool("rect")}
+            className={`w-12 h-12 rounded-xl text-white transition ${
+              tool === "rect"
+                ? "bg-blue-600"
+                : "bg-slate-800 hover:bg-slate-700"
             }`}
           >
             ▭
@@ -62,63 +67,80 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
 
           <button
             onClick={() => setTool("circle")}
-            className={`w-12 h-12 rounded-xl ${
-              tool === "circle" ? "bg-blue-600" : "bg-slate-800"
+            className={`w-12 h-12 rounded-xl text-white transition ${
+              tool === "circle"
+                ? "bg-blue-600"
+                : "bg-slate-800 hover:bg-slate-700"
             }`}
           >
-            ◯
+            ○
           </button>
         </div>
 
-        {/* CENTER CANVAS */}
-        <div className="flex-1 relative bg-slate-100">
-          {/* GRID */}
+        {/* CANVAS AREA */}
+
+        <div className="flex-1 relative overflow-auto bg-slate-100">
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: "radial-gradient(#d1d5db 1px, transparent 1px)",
-              backgroundSize: "20px 20px",
+              backgroundImage: "radial-gradient(#cbd5e1 1px, transparent 1px)",
+              backgroundSize: "25px 25px",
             }}
           />
 
-          {/* CANVAS */}
           <canvas
-            width={2000}
-            height={1200}
-            className="absolute top-0 left-0 cursor-crosshair"
+            width={2500}
+            height={1500}
+            className="absolute top-0 left-0"
           />
 
-          {/* ROOM BADGE */}
-          <div className="absolute top-4 left-4 bg-white shadow rounded-xl px-4 py-2 text-black">
-            Room:
-            <span className="font-semibold ml-2">{roomId}</span>
+          {/* ROOM INFO */}
+
+          <div className="absolute top-4 left-4 bg-white rounded-xl shadow-lg border px-4 py-3">
+            <div className="font-bold text-slate-900">Alloy Canvas</div>
+
+            <div className="text-xs text-slate-500">Room ID</div>
+
+            <div className="text-xs font-mono text-blue-600">{roomId}</div>
           </div>
 
-          {/* ZOOM CONTROLS */}
-          <div className="absolute bottom-4 left-4 bg-white shadow-lg rounded-xl flex items-center text-black">
-            <button className="px-4 py-2">−</button>
+          {/* TOOL INFO */}
 
-            <span className="px-4">100%</span>
+          <div className="absolute top-4 right-4 bg-white rounded-xl shadow-lg border px-4 py-3">
+            <div className="text-xs text-slate-500">Active Tool</div>
 
-            <button className="px-4 py-2">+</button>
+            <div className="font-semibold text-slate-900 capitalize">
+              {tool}
+            </div>
+          </div>
+
+          {/* STATS */}
+
+          <div className="absolute bottom-4 left-4 flex gap-3">
+            <div className="bg-white border rounded-xl shadow px-4 py-2">
+              <div className="text-xs text-slate-500">Users</div>
+
+              <div className="font-bold text-slate-900">{users.length}</div>
+            </div>
+
+            <div className="bg-white border rounded-xl shadow px-4 py-2">
+              <div className="text-xs text-slate-500">Messages</div>
+
+              <div className="font-bold text-slate-900">{messages.length}</div>
+            </div>
           </div>
         </div>
 
-        {/* RIGHT SIDEBAR */}
-        <div className="w-[380px] bg-slate-950 border-l border-slate-800 flex flex-col">
+        {/* RIGHT PANEL */}
+
+        <div className="w-80 bg-slate-900 border-l border-slate-800 flex flex-col">
           <div className="p-4 border-b border-slate-800">
-            <h2 className="font-bold text-lg">Collaboration</h2>
+            <h3 className="font-bold text-white">Layers</h3>
+
+            <p className="text-xs text-slate-400">Manage canvas objects</p>
           </div>
 
-          <div className="flex-1 overflow-auto">
-            <UserList users={users} />
-
-            <LayersPanel />
-          </div>
-
-          <div className="h-[320px] border-t border-slate-800">
-            <Chat roomId={roomId} messages={messages} />
-          </div>
+          <LayersPanel />
         </div>
       </div>
     </div>
