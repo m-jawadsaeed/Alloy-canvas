@@ -24,13 +24,23 @@ interface Props {
   roomId: string;
   users: User[];
   messages: message[];
+
+  showUsers: boolean;
+  showChat: boolean;
+
+  toggleUsers: () => void;
+  toggleChat: () => void;
 }
 
-export default function WhiteBoard({ roomId, users, messages }: Props) {
+export default function WhiteBoard({ roomId, users, messages}: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-
+  const [history, setHistory] = useState<string[]>([]);
+  const [redoHistory, setRedoHistory] = useState<string[]>([]);
   const [drawing, setDrawing] = useState(false);
-
+  const [startPoint, setStartPoint] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
   const [tool, setTool] = useState("pen");
 
   const [color, setColor] = useState("#2563eb");
@@ -57,6 +67,45 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
     img.src = data;
   };
 
+  const undoCanvas = () => {
+    if (history.length < 2) return;
+
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const previous = history[history.length - 2];
+
+    setRedoHistory((prev) => [history[history.length - 1], ...prev]);
+
+    setHistory((prev) => prev.slice(0, -1));
+
+    drawImage(previous);
+  };
+  const redoCanvas = () => {
+    if (redoHistory.length === 0) return;
+
+    const snapshot = redoHistory[0];
+
+    setHistory((prev) => [...prev, snapshot]);
+
+    setRedoHistory((prev) => prev.slice(1));
+
+    drawImage(snapshot);
+  };
+  const exportCanvas = () => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const link = document.createElement("a");
+
+    link.download = `alloy-canvas-${roomId}.png`;
+
+    link.href = canvas.toDataURL("image/png");
+
+    link.click();
+  };
   const loadCanvas = async () => {
     try {
       const res = await api.get(`/canvas/${roomId}`);
@@ -75,6 +124,9 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
     if (!canvas) return;
 
     const snapshot = canvas.toDataURL();
+
+    setHistory((prev) => [...prev, snapshot]);
+    setRedoHistory([]);
 
     try {
       await api.post(`/canvas/${roomId}`, {
@@ -117,15 +169,19 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
 
     if (!ctx) return;
 
+    const x = e.nativeEvent.offsetX;
+    const y = e.nativeEvent.offsetY;
+
+    if (tool === "rect" || tool === "circle") {
+      setStartPoint({ x, y });
+      return;
+    }
+
     setDrawing(true);
 
     ctx.beginPath();
 
-    ctx.moveTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY);
-
-    ctx.lineCap = "round";
-
-    ctx.lineJoin = "round";
+    ctx.moveTo(x, y);
 
     ctx.lineWidth = lineWidth;
 
@@ -148,7 +204,57 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
     ctx.stroke();
   };
 
-  const stopDraw = async () => {
+  const stopDraw = async (e?: React.MouseEvent<HTMLCanvasElement>) => {
+    const canvas = canvasRef.current;
+
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+
+    if (!ctx) return;
+
+    if (startPoint && e && tool === "rect") {
+      ctx.strokeStyle = color;
+
+      ctx.lineWidth = lineWidth;
+
+      ctx.strokeRect(
+        startPoint.x,
+        startPoint.y,
+        e.nativeEvent.offsetX - startPoint.x,
+        e.nativeEvent.offsetY - startPoint.y,
+      );
+
+      setStartPoint(null);
+
+      await saveCanvas();
+
+      return;
+    }
+
+    if (startPoint && e && tool === "circle") {
+      const radius = Math.sqrt(
+        Math.pow(e.nativeEvent.offsetX - startPoint.x, 2) +
+          Math.pow(e.nativeEvent.offsetY - startPoint.y, 2),
+      );
+
+      ctx.beginPath();
+
+      ctx.arc(startPoint.x, startPoint.y, radius, 0, Math.PI * 2);
+
+      ctx.strokeStyle = color;
+
+      ctx.lineWidth = lineWidth;
+
+      ctx.stroke();
+
+      setStartPoint(null);
+
+      await saveCanvas();
+
+      return;
+    }
+
     if (!drawing) return;
 
     setDrawing(false);
@@ -172,7 +278,11 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
 
   return (
     <div className="h-full flex flex-col bg-slate-950">
-      <Toolbar />
+      <Toolbar
+        onUndo={undoCanvas}
+        onRedo={redoCanvas}
+        onExport={exportCanvas}
+      />
 
       <div className="flex flex-1 overflow-hidden">
         {/* LEFT TOOLBAR */}
@@ -283,7 +393,7 @@ export default function WhiteBoard({ roomId, users, messages }: Props) {
             height={1500}
             onMouseDown={startDraw}
             onMouseMove={draw}
-            onMouseUp={stopDraw}
+            onMouseUp={(e) => stopDraw(e)}
             onMouseLeave={stopDraw}
             className="absolute top-0 left-0 cursor-crosshair"
           />

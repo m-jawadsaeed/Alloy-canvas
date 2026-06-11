@@ -12,15 +12,13 @@ import type { message } from "../types/message";
 import type { User } from "../types/user";
 
 export default function Room() {
-  const { roomId } = useParams<{
-    roomId: string;
-  }>();
+  const { roomId } = useParams<{ roomId: string }>();
 
   const [messages, setMessages] = useState<message[]>([]);
-
   const [users, setUsers] = useState<User[]>([]);
 
-  const [showChat] = useState(false);
+  const [showUsers, setShowUsers] = useState(true);
+  const [showChat, setShowChat] = useState(true);
 
   useEffect(() => {
     if (!roomId) return;
@@ -28,7 +26,6 @@ export default function Room() {
     const fetchMessages = async () => {
       try {
         const res = await api.get(`/chat/messages/${roomId}`);
-
         setMessages(res.data);
       } catch (error) {
         console.log(error);
@@ -61,7 +58,6 @@ export default function Room() {
 
     return () => {
       socket.off("receive-message");
-
       socket.off("room-users");
     };
   }, [roomId]);
@@ -76,12 +72,22 @@ export default function Room() {
 
   return (
     <div className="h-screen flex bg-slate-950 overflow-hidden">
-      <aside className="w-72 border-r border-slate-800 bg-slate-900">
-        <UserList users={users} />
-      </aside>
+      {showUsers && (
+        <aside className="w-72 border-r border-slate-800 bg-slate-900">
+          <UserList users={users} />
+        </aside>
+      )}
 
       <main className="flex-1 overflow-hidden">
-        <WhiteBoard roomId={roomId} users={users} messages={messages} />
+        <WhiteBoard
+          roomId={roomId}
+          users={users}
+          messages={messages}
+          showUsers={showUsers}
+          showChat={showChat}
+          toggleUsers={() => setShowUsers(!showUsers)}
+          toggleChat={() => setShowChat(!showChat)}
+        />
       </main>
 
       {showChat && (
