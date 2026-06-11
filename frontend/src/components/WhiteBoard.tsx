@@ -1,566 +1,126 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
+import { useState } from "react";
 import Toolbar from "./Toolbar";
-import CursorLayer from "./CursorLayer";
-import TextTool from "./TextTool";
+import Chat from "./Chat";
+import UserList from "./UserList";
 import LayersPanel from "./LayersPanel";
-import ExportButtons from "./ExportButtons";
+import type { message } from "../types/message";
+import type { User } from "../types/user";    
 
-import { socket } from "../services/socket";
-
-import {
-  saveCanvas,
-  getCanvas,
-} from "../api/canvas";
-
-import {
-  useCanvasStore,
-} from "../store/canvas.store";
 
 interface Props {
   roomId: string;
+  users: User[];
+  messages: message[];
 }
 
-interface Cursor {
-  id: string;
-  username: string;
-  x: number;
-  y: number;
-}
-
-export default function Whiteboard({
-  roomId,
-}: Props) {
-  const canvasRef =
-    useRef<HTMLCanvasElement>(null);
-
-  const history =
-    useRef<ImageData[]>([]);
-
-  const [drawing, setDrawing] =
-    useState(false);
-
-  const [tool, setTool] =
-    useState("pencil");
-
-  const [color, setColor] =
-    useState("#000000");
-
-  const [lineWidth, setLineWidth] =
-    useState(2);
-
-  const [cursors, setCursors] =
-    useState<Cursor[]>([]);
-
-  const addElement =
-    useCanvasStore(
-      (state) =>
-        state.addElement
-    );
-
-  const loadSavedCanvas =
-    async () => {
-      try {
-        const response =
-          await getCanvas(roomId);
-
-        const image =
-          response.data?.data;
-
-        if (!image) return;
-
-        const canvas =
-          canvasRef.current;
-
-        if (!canvas) return;
-
-        const ctx =
-          canvas.getContext("2d");
-
-        if (!ctx) return;
-
-        const img =
-          new Image();
-
-        img.onload = () => {
-          ctx.clearRect(
-            0,
-            0,
-            canvas.width,
-            canvas.height
-          );
-
-          ctx.drawImage(
-            img,
-            0,
-            0
-          );
-        };
-
-        img.src = image;
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-  useEffect(() => {
-    loadSavedCanvas();
-
-    const canvas =
-      canvasRef.current;
-
-    if (!canvas) return;
-
-    const ctx =
-      canvas.getContext("2d");
-
-    if (!ctx) return;
-
-    socket.on(
-      "draw",
-      ({
-        x,
-        y,
-        prevX,
-        prevY,
-        color,
-        lineWidth,
-      }) => {
-        ctx.strokeStyle =
-          color;
-
-        ctx.lineWidth =
-          lineWidth;
-
-        ctx.lineCap =
-          "round";
-
-        ctx.beginPath();
-
-        ctx.moveTo(
-          prevX,
-          prevY
-        );
-
-        ctx.lineTo(
-          x,
-          y
-        );
-
-        ctx.stroke();
-      }
-    );
-
-    socket.on(
-      "canvas-clear",
-      () => {
-        ctx.clearRect(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        );
-      }
-    );
-
-    socket.on(
-      "cursor-move",
-      (cursor: Cursor) => {
-        setCursors((prev) => {
-          const filtered =
-            prev.filter(
-              (c) =>
-                c.id !==
-                cursor.id
-            );
-
-          return [
-            ...filtered,
-            cursor,
-          ];
-        });
-      }
-    );
-
-    socket.on(
-      "canvas-updated",
-      () => {
-        loadSavedCanvas();
-      }
-    );
-
-    return () => {
-      socket.off("draw");
-
-      socket.off(
-        "canvas-clear"
-      );
-
-      socket.off(
-        "cursor-move"
-      );
-
-      socket.off(
-        "canvas-updated"
-      );
-    };
-  }, [roomId]);
-
-  useEffect(() => {
-    const interval =
-      setInterval(
-        async () => {
-          const canvas =
-            canvasRef.current;
-
-          if (!canvas)
-            return;
-
-          try {
-            await saveCanvas(
-              roomId,
-              canvas.toDataURL(
-                "image/png"
-              )
-            );
-
-            socket.emit(
-              "canvas-saved",
-              {
-                roomId,
-              }
-            );
-          } catch (
-            error
-          ) {
-            console.log(
-              error
-            );
-          }
-        },
-        5000
-      );
-
-    return () =>
-      clearInterval(
-        interval
-      );
-  }, [roomId]);
-
-  const saveHistory =
-    () => {
-      const canvas =
-        canvasRef.current;
-
-      if (!canvas) return;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      if (!ctx) return;
-
-      history.current.push(
-        ctx.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height
-        )
-      );
-    };
-
-  const undo = () => {
-    const canvas =
-      canvasRef.current;
-
-    if (!canvas) return;
-
-    const ctx =
-      canvas.getContext("2d");
-
-    if (!ctx) return;
-
-    const previous =
-      history.current.pop();
-
-    if (!previous)
-      return;
-
-    ctx.putImageData(
-      previous,
-      0,
-      0
-    );
-  };
-
-  const clearCanvas =
-    () => {
-      const canvas =
-        canvasRef.current;
-
-      if (!canvas) return;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      if (!ctx) return;
-
-      saveHistory();
-
-      ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-      );
-
-      socket.emit(
-        "canvas-clear",
-        {
-          roomId,
-        }
-      );
-    };
-
-  const getCoordinates =
-    (
-      e: React.MouseEvent
-    ) => {
-      const canvas =
-        canvasRef.current;
-
-      if (!canvas)
-        return null;
-
-      const rect =
-        canvas.getBoundingClientRect();
-
-      return {
-        x:
-          e.clientX -
-          rect.left,
-        y:
-          e.clientY -
-          rect.top,
-      };
-    };
-
-  const startDrawing =
-    (
-      e: React.MouseEvent
-    ) => {
-      const coords =
-        getCoordinates(
-          e
-        );
-
-      if (!coords)
-        return;
-
-      const canvas =
-        canvasRef.current;
-
-      if (!canvas)
-        return;
-
-      canvas.dataset.prevX =
-        coords.x.toString();
-
-      canvas.dataset.prevY =
-        coords.y.toString();
-
-      saveHistory();
-
-      setDrawing(true);
-    };
-
-  const stopDrawing =
-    () => {
-      setDrawing(false);
-    };
-
-  const handleCursorMove =
-    (
-      e: React.MouseEvent
-    ) => {
-      const user =
-        JSON.parse(
-          localStorage.getItem(
-            "user"
-          ) || "{}"
-        );
-
-      socket.emit(
-        "cursor-move",
-        {
-          roomId,
-          x: e.clientX,
-          y: e.clientY,
-          username:
-            user.username ||
-            "Guest",
-        }
-      );
-    };
-
-  const draw =
-    (
-      e: React.MouseEvent
-    ) => {
-      if (!drawing)
-        return;
-
-      const coords =
-        getCoordinates(
-          e
-        );
-
-      if (!coords)
-        return;
-
-      const canvas =
-        canvasRef.current;
-
-      if (!canvas)
-        return;
-
-      const ctx =
-        canvas.getContext("2d");
-
-      if (!ctx)
-        return;
-
-      const prevX =
-        Number(
-          canvas.dataset
-            .prevX || 0
-        );
-
-      const prevY =
-        Number(
-          canvas.dataset
-            .prevY || 0
-        );
-
-      ctx.strokeStyle =
-        tool ===
-        "eraser"
-          ? "#ffffff"
-          : color;
-
-      ctx.lineWidth =
-        lineWidth;
-
-      ctx.lineCap =
-        "round";
-
-      ctx.beginPath();
-
-      ctx.moveTo(
-        prevX,
-        prevY
-      );
-
-      ctx.lineTo(
-        coords.x,
-        coords.y
-      );
-
-      ctx.stroke();
-
-      socket.emit(
-        "draw",
-        {
-          roomId,
-          x: coords.x,
-          y: coords.y,
-          prevX,
-          prevY,
-          color:
-            tool ===
-            "eraser"
-              ? "#ffffff"
-              : color,
-          lineWidth,
-        }
-      );
-
-      canvas.dataset.prevX =
-        coords.x.toString();
-
-      canvas.dataset.prevY =
-        coords.y.toString();
-    };
+export default function WhiteBoard({ roomId, users, messages }: Props) {
+  const [tool, setTool] = useState("pen");
 
   return (
-    <>
-      <Toolbar
-        tool={tool}
-        setTool={setTool}
-        color={color}
-        setColor={setColor}
-        lineWidth={lineWidth}
-        setLineWidth={
-          setLineWidth
-        }
-        clearCanvas={
-          clearCanvas
-        }
-        undo={undo}
-      />
+    <div className="h-screen bg-[#0f172a] text-white overflow-hidden">
+      {/* TOP BAR */}
+      <Toolbar />
 
-      <TextTool
-        onAdd={(text) => {
-          addElement({
-            id:
-              crypto.randomUUID(),
-            type: "text",
-            text,
-            x: 100,
-            y: 100,
-            color,
-          });
-        }}
-      />
+      <div className="flex h-[calc(100vh-72px)]">
+        {/* LEFT SIDEBAR */}
+        <div className="w-20 bg-slate-950 border-r border-slate-800 flex flex-col items-center py-4 gap-4">
+          <button
+            onClick={() => setTool("pen")}
+            className={`w-12 h-12 rounded-xl ${
+              tool === "pen" ? "bg-blue-600" : "bg-slate-800"
+            }`}
+          >
+            ✏️
+          </button>
 
-      <LayersPanel />
+          <button
+            onClick={() => setTool("eraser")}
+            className={`w-12 h-12 rounded-xl ${
+              tool === "eraser" ? "bg-blue-600" : "bg-slate-800"
+            }`}
+          >
+            🩹
+          </button>
 
-      <ExportButtons
-        canvasRef={canvasRef}
-      />
+          <button
+            onClick={() => setTool("text")}
+            className={`w-12 h-12 rounded-xl ${
+              tool === "text" ? "bg-blue-600" : "bg-slate-800"
+            }`}
+          >
+            T
+          </button>
 
-      <CursorLayer
-        cursors={cursors}
-      />
+          <button
+            onClick={() => setTool("rectangle")}
+            className={`w-12 h-12 rounded-xl ${
+              tool === "rectangle" ? "bg-blue-600" : "bg-slate-800"
+            }`}
+          >
+            ▭
+          </button>
 
-      <canvas
-        ref={canvasRef}
-        width={1000}
-        height={600}
-        style={{
-          border:
-            "1px solid black",
-        }}
-        onMouseDown={
-          startDrawing
-        }
-        onMouseMove={(e) => {
-          draw(e);
-          handleCursorMove(
-            e
-          );
-        }}
-        onMouseUp={
-          stopDrawing
-        }
-        onMouseLeave={
-          stopDrawing
-        }
-      />
-    </>
+          <button
+            onClick={() => setTool("circle")}
+            className={`w-12 h-12 rounded-xl ${
+              tool === "circle" ? "bg-blue-600" : "bg-slate-800"
+            }`}
+          >
+            ◯
+          </button>
+        </div>
+
+        {/* CENTER CANVAS */}
+        <div className="flex-1 relative bg-slate-100">
+          {/* GRID */}
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: "radial-gradient(#d1d5db 1px, transparent 1px)",
+              backgroundSize: "20px 20px",
+            }}
+          />
+
+          {/* CANVAS */}
+          <canvas
+            width={2000}
+            height={1200}
+            className="absolute top-0 left-0 cursor-crosshair"
+          />
+
+          {/* ROOM BADGE */}
+          <div className="absolute top-4 left-4 bg-white shadow rounded-xl px-4 py-2 text-black">
+            Room:
+            <span className="font-semibold ml-2">{roomId}</span>
+          </div>
+
+          {/* ZOOM CONTROLS */}
+          <div className="absolute bottom-4 left-4 bg-white shadow-lg rounded-xl flex items-center text-black">
+            <button className="px-4 py-2">−</button>
+
+            <span className="px-4">100%</span>
+
+            <button className="px-4 py-2">+</button>
+          </div>
+        </div>
+
+        {/* RIGHT SIDEBAR */}
+        <div className="w-[380px] bg-slate-950 border-l border-slate-800 flex flex-col">
+          <div className="p-4 border-b border-slate-800">
+            <h2 className="font-bold text-lg">Collaboration</h2>
+          </div>
+
+          <div className="flex-1 overflow-auto">
+            <UserList users={users} />
+
+            <LayersPanel />
+          </div>
+
+          <div className="h-[320px] border-t border-slate-800">
+            <Chat roomId={roomId} messages={messages} />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

@@ -1,165 +1,118 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
-import api from "../api/axios";
-
-import Chat from "../components/Chat";
-import UsersList from "../components/UserList";
 import Whiteboard from "../components/WhiteBoard";
+import Chat from "../components/Chat";
+import UserList from "../components/UserList";
 
+import api from "../api/axios";
 import { socket } from "../services/socket";
 
+import type { message } from "../types/message";
 import type { User } from "../types/user";
-import type { Message } from "../types/message";
 
 export default function Room() {
-  const { roomId } = useParams();
+  const { roomId } = useParams<{ roomId: string }>();
 
-  const [users, setUsers] =
-    useState<User[]>([]);
-
-  const [messages, setMessages] =
-    useState<Message[]>([]);
+  const [messages, setMessages] = useState<message[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
+  const [showChat, setShowChat] = useState(true);
 
   useEffect(() => {
     if (!roomId) return;
 
-    const initializeRoom =
-      async () => {
-        try {
-          const [usersRes, messagesRes] =
-            await Promise.all([
-              api.get(
-                `/users/${roomId}`
-              ),
-              api.get(
-                `/chat/${roomId}`
-              ),
-            ]);
+    const fetchMessages = async () => {
+      try {
+        const res = await api.get(`/chat/messages/${roomId}`);
 
-          setUsers(
-            usersRes.data
-          );
-
-          setMessages(
-            messagesRes.data
-          );
-        } catch (error) {
-          console.error(
-            error
-          );
-        }
-      };
-
-    initializeRoom();
-
-    const user = JSON.parse(
-      localStorage.getItem(
-        "user"
-      ) || "{}"
-    );
-
-    socket.connect();
-
-    socket.emit(
-      "join-room",
-      {
-        roomId,
-        username:
-          user.username,
+        setMessages(res.data);
+      } catch (error) {
+        console.error(error);
       }
-    );
-
-    const handleMessage = (
-      message: Message
-    ) => {
-      setMessages(
-        (prev) => [
-          ...prev,
-          message,
-        ]
-      );
     };
 
-    const refreshUsers =
-      async () => {
-        try {
-          const res =
-            await api.get(
-              `/users/${roomId}`
-            );
+    fetchMessages();
+  }, [roomId]);
 
-          setUsers(
-            res.data
-          );
-        } catch (error) {
-          console.error(
-            error
-          );
-        }
-      };
+  useEffect(() => {
+    if (!roomId) return;
 
-    socket.on(
-      "receive-message",
-      handleMessage
-    );
+    const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
-    socket.on(
-      "user-joined",
-      refreshUsers
-    );
+    socket.emit("join-room", {
+      roomId,
+      username: currentUser.username,
+      accountId: currentUser.id,
+    });
 
-    socket.on(
-      "user-left",
-      refreshUsers
-    );
+    const handleMessage = (message: message) => {
+      setMessages((prev) => [...prev, message]);
+    };
+
+    const handleUsers = (roomUsers: User[]) => {
+      setUsers(roomUsers);
+    };
+
+    socket.on("receive-message", handleMessage);
+
+    socket.on("room-users", handleUsers);
 
     return () => {
-      socket.off(
-        "receive-message",
-        handleMessage
-      );
+      socket.off("receive-message", handleMessage);
 
-      socket.off(
-        "user-joined",
-        refreshUsers
-      );
-
-      socket.off(
-        "user-left",
-        refreshUsers
-      );
-
-      socket.disconnect();
+      socket.off("room-users", handleUsers);
     };
   }, [roomId]);
 
   if (!roomId) {
     return (
-      <div>
-        Invalid Room
+      <div className="h-screen bg-slate-950 flex items-center justify-center text-white">
+        Invalid Room{" "}
       </div>
     );
   }
 
   return (
-    <div>
-      <h1>
-        Room {roomId}
-      </h1>
+    <div className="h-screen bg-slate-950 flex flex-col overflow-hidden">
+      <header className="h-16 border-b border-slate-800 bg-slate-900 flex items-center justify-between px-6">
+        <div>
+          <h1 className="text-white font-bold text-xl">Alloy Canvas</h1>
 
-      <UsersList
-        users={users}
-      />
+          <p className="text-slate-400 text-xs">Room ID: {roomId}</p>
+        </div>
 
-      <Whiteboard
-        roomId={roomId}
-      />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => navigator.clipboard.writeText(window.location.href)}
+            className="px-4 py-2 rounded-xl bg-slate-800 text-white hover:bg-slate-700"
+          >
+            Invite
+          </button>
 
-      <Chat
-        roomId={roomId}
-        messages={messages}
-      />
+          <button
+            onClick={() => setShowChat(!showChat)}
+            className="px-4 py-2 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+          >
+            {showChat ? "Hide Chat" : "Show Chat"}
+          </button>
+        </div>
+      </header>
+
+      <div className="flex flex-1 overflow-hidden">
+        <aside className="w-72 border-r border-slate-800 bg-slate-900">
+          <UserList users={users} />
+        </aside>
+
+        <main className="flex-1 overflow-hidden">
+          <Whiteboard roomId={roomId} users={users} messages={messages} />
+        </main>
+
+        {showChat && (
+          <aside className="w-[380px] border-l border-slate-800 bg-slate-900">
+            <Chat roomId={roomId} messages={messages} />
+          </aside>
+        )}
+      </div>
     </div>
   );
 }

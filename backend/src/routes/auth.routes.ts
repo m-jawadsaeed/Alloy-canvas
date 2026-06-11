@@ -9,24 +9,12 @@ import {
 
 const router = Router();
 
-router.get(
-  "/check-username/:username",
-  checkUsername
-);
+router.get("/check-username/:username", checkUsername);
 
-router.get(
-  "/suggest-username/:name",
-  suggestUsername
-);
+router.get("/suggest-username/:name", suggestUsername);
 
-router.post(
-  "/register",
-  register
-);
+router.post("/register", register);
 
-router.post(
-  "/login",
-  login
-);
+router.post("/login", login);
 
 export default router;

@@ -1,110 +1,25 @@
-import type { Dispatch, SetStateAction } from "react";
-
-interface Props {
-  tool: string;
-
-  setTool: Dispatch<
-    SetStateAction<string>
-  >;
-
-  color: string;
-
-  setColor: Dispatch<
-    SetStateAction<string>
-  >;
-
-  lineWidth: number;
-
-  setLineWidth: Dispatch<
-    SetStateAction<number>
-  >;
-
-  clearCanvas: () => void;
-
-  undo: () => void;
-}
-
-export default function Toolbar({
-  tool,
-  setTool,
-  color,
-  setColor,
-  lineWidth,
-  setLineWidth,
-  clearCanvas,
-  undo,
-}: Props) {
+export default function Toolbar() {
   return (
-    <div
-      style={{
-        display: "flex",
-        gap: "10px",
-        marginBottom: "10px",
-        alignItems: "center",
-      }}
-    >
-      <button
-        onClick={() =>
-          setTool("pencil")
-        }
-      >
-        Pencil
-      </button>
+    <div className="h-[72px] bg-slate-950 border-b border-slate-800 px-6 flex items-center justify-between">
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold">
+          A
+        </div>
 
-      <button
-        onClick={() =>
-          setTool("eraser")
-        }
-      >
-        Eraser
-      </button>
+        <div>
+          <h1 className="font-bold">Alloy Canvas</h1>
 
-      <input
-        type="color"
-        value={color}
-        onChange={(e) =>
-          setColor(
-            e.target.value
-          )
-        }
-      />
+          <p className="text-xs text-slate-400">Collaborative Whiteboard</p>
+        </div>
+      </div>
 
-      <input
-        type="range"
-        min={1}
-        max={20}
-        value={lineWidth}
-        onChange={(e) =>
-          setLineWidth(
-            Number(
-              e.target.value
-            )
-          )
-        }
-      />
+      <div className="flex items-center gap-3">
+        <button className="px-4 py-2 bg-slate-800 rounded-lg">Undo</button>
 
-      <span>
-        {lineWidth}px
-      </span>
+        <button className="px-4 py-2 bg-slate-800 rounded-lg">Redo</button>
 
-      <button
-        onClick={undo}
-      >
-        Undo
-      </button>
-
-      <button
-        onClick={
-          clearCanvas
-        }
-      >
-        Clear
-      </button>
-
-      <span>
-        Current Tool:
-        {tool}
-      </span>
+        <button className="px-4 py-2 bg-blue-600 rounded-lg">Share</button>
+      </div>
     </div>
   );
 }

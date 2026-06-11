@@ -1,7 +1,6 @@
-interface Props {
+interface SelectionBoxProps {
   x: number;
   y: number;
-
   width: number;
   height: number;
 }
@@ -11,24 +10,15 @@ export default function SelectionBox({
   y,
   width,
   height,
-}: Props) {
+}: SelectionBoxProps) {
   return (
     <div
+      className="pointer-events-none absolute border-2 border-blue-500 bg-blue-500/10"
       style={{
-        position:
-          "absolute",
-
         left: x,
         top: y,
-
         width,
         height,
-
-        border:
-          "2px dashed blue",
-
-        pointerEvents:
-          "none",
       }}
     />
   );

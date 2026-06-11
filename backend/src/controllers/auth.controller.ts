@@ -134,6 +134,13 @@ export const login = async (
     password,
   } = req.body;
 
+  if (!identifier || !password) {
+    return res.status(400).json({
+      error:
+        "Identifier and password are required",
+    });
+  }
+
   const isEmail =
     identifier.includes("@") &&
     identifier.includes(".");

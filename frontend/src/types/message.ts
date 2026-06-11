@@ -1,13 +1,13 @@
-export interface Message {
+export interface message {
   id: string;
 
   content: string;
 
-  roomId: string;
+  createdAt: string;
 
   userId: string;
 
-  createdAt: string;
+  roomId: string;
 
   user: {
     id: string;
