@@ -1,0 +1,213 @@
+@import "tailwindcss";
+
+/* ============================================
+   BUGGCY — Blue & White Editorial Design System
+   Inspired by Dennis Snellenberg's minimal style
+   ============================================ */
+
+:root {
+  --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  /* Blue & White only palette */
+  --white: #ffffff;
+  --paper: #f6f8fc;          /* subtle off-white surface */
+  --paper-2: #eef3fb;        /* alt surface */
+  --blue-50: #eef4ff;
+  --blue-100: #dbe7ff;
+  --blue-200: #bcd2ff;
+  --blue-300: #8eb3ff;
+  --blue-400: #5b8dff;
+  --blue-500: #2f6bff;
+  --blue-600: #1d4ed8;       /* primary accent */
+  --blue-700: #1b3fb8;
+  --blue-800: #17307f;
+  --blue-900: #0c1c3f;       /* deep navy (dark sections / text) */
+  --blue-950: #061026;       /* near-black blue */
+  --ink: #0a1633;            /* main text on white */
+
+  --container: 1500px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--white);
+  color: var(--ink);
+  overflow-x: hidden;
+}
+
+/* Lenis */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ============================================
+   CONTAINER — proper width + padding
+   ============================================ */
+.container-x {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: 1.5rem;     /* 24px mobile */
+}
+@media (min-width: 640px) { .container-x { padding-inline: 2.5rem; } }   /* 40px */
+@media (min-width: 1024px) { .container-x { padding-inline: 3.5rem; } }  /* 56px */
+@media (min-width: 1440px) { .container-x { padding-inline: 5rem; } }    /* 80px */
+
+.container-narrow {
+  width: 100%;
+  max-width: 880px;
+  margin-inline: auto;
+  padding-inline: 1.5rem;
+}
+@media (min-width: 640px) { .container-narrow { padding-inline: 2.5rem; } }
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+.font-display { font-family: var(--font-display); }
+
+.display-xl {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.blue-text {
+  background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-400) 50%, var(--blue-700) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   SCROLLBAR
+   ============================================ */
+::-webkit-scrollbar { width: 7px; }
+::-webkit-scrollbar-track { background: var(--paper); }
+::-webkit-scrollbar-thumb {
+  background: var(--blue-300);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--blue-500); }
+
+::selection { background: var(--blue-600); color: #fff; }
+
+:focus-visible {
+  outline: 2px solid var(--blue-600);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee var(--marquee-duration, 30s) linear infinite;
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(20px, -30px) scale(1.05); }
+}
+.animate-float-slow { animation: float-slow 14s ease-in-out infinite; }
+
+@keyframes float-slow-2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-30px, 20px) scale(1.08); }
+}
+.animate-float-slow-2 { animation: float-slow-2 18s ease-in-out infinite; }
+
+@keyframes spin-slow {
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow { animation: spin-slow 22s linear infinite; }
+
+@keyframes pulse-ring {
+  0% { transform: scale(0.8); opacity: 0.6; }
+  100% { transform: scale(2.4); opacity: 0; }
+}
+
+/* ============================================
+   SHARED EFFECTS
+   ============================================ */
+/* Subtle grain / noise overlay */
+.noise-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 300 300' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Grid pattern */
+.grid-pattern {
+  background-image:
+    linear-gradient(to right, rgba(29,78,216,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(29,78,216,0.05) 1px, transparent 1px);
+  background-size: 64px 64px;
+}
+
+/* Line clamp */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Magnetic link underline */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1px;
+  width: 100%;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* Text mask reveal */
+.reveal-mask { overflow: hidden; }
+
+/* Performance */
+.gpu { will-change: transform, opacity; transform: translateZ(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
